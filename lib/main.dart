@@ -47,7 +47,7 @@ void _addToDo() {
     });
   }
 
-  //Tenho duvida de como funciona o "".
+  //Tenho duvida de como funciona o "path_provider".
   //A explicaçao dele nao ficou tao clara pra mim.
     Future<File> _getFile() async{
 final directory = await getApplicationDocumentsDirectory();
