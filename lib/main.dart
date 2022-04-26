@@ -47,6 +47,8 @@ void _addToDo() {
     });
   }
 
+  //Tenho duvida de como funciona o "".
+  //A explicaçao dele nao ficou tao clara pra mim.
     Future<File> _getFile() async{
 final directory = await getApplicationDocumentsDirectory();
 return File("${directory.path}/data.json"); 
