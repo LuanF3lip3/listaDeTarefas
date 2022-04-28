@@ -22,6 +22,9 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
 List _toDoList = [];
+
+late Map _lastRemoved;
+late int _lastRemovedPos;
   
 TextEditingController textToDo = TextEditingController();
 // final text = TextEditingController();
@@ -67,6 +70,23 @@ return "";
 }
 }
 
+Future<void> _refresh() async{
+  await Future.delayed(const Duration(milliseconds: 1500 ));
+  setState(() {
+_toDoList.sort((a, b) {
+  if(a["ok"] && !b["ok"]) {
+    return 1;
+  } else if(b["ok"] && !a["ok"]) {
+    return -1;
+  }else {
+    return 0;
+  }
+  });
+    _saveData();
+},
+);
+}
+
 Widget buildItem  (context, index){
  return Dismissible(key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
  background: Container(
@@ -90,6 +110,29 @@ secondary: CircleAvatar(child: Icon(_toDoList[index]["ok"]?
 Icons.check: Icons.error),
 ),
 ),
+onDismissed: (direction) {
+  setState(() {
+  _lastRemoved = Map.from(_toDoList[index]);
+  _lastRemovedPos = index;
+  _toDoList.removeAt(index);
+
+    _saveData();
+  });
+
+  final snack = SnackBar(
+    content: Text("Tarefa \"${_lastRemoved["title"]}\" foi deletada con sucesso!!!" ),
+    action: SnackBarAction(label: "desfazer",
+    onPressed: (){
+      setState(() {
+      _toDoList.insert(_lastRemovedPos, _lastRemoved);
+      });
+    }
+  ),
+  duration: const Duration(seconds: 3),
+  );
+  ScaffoldMessenger.of(context).removeCurrentSnackBar();
+  ScaffoldMessenger.of(context).showSnackBar(snack);
+},
 );
 
 }
@@ -114,18 +157,27 @@ Icons.check: Icons.error),
                       labelText: "Nova Tarefa"
                     ),
                     controller: textToDo,
+                    onChanged: (value) {
+                      setState(() {
+                        textToDo.text = value;
+                      });
+                    },
                   ),
                 ),
-                ElevatedButton(onPressed: _addToDo, child: const Text("Add"))
+                ElevatedButton(onPressed: textToDo.text.isEmpty ? null : _addToDo,
+                child: const Text("Add"))
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _toDoList.length,
-              padding: const EdgeInsets.only(top: 10),
-              itemBuilder: buildItem,
-              ),
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView.builder(
+                itemCount: _toDoList.length,
+                padding: const EdgeInsets.only(top: 10),
+                itemBuilder: buildItem,
+                ),
+            ),
           )
         ],
       ),
